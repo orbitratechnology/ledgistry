@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"]
+    },
+    "airwallex-developer": {
+      "command": "npx",
+      "args": ["-y", "@airwallex/developer-mcp@latest"]
+    }
+  }
+}

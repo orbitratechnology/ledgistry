@@ -7,6 +7,31 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+type MatchRow = {
+  applied_amount_minor: number | null
+  confidence: number | null
+  created_at: string
+  decided_at: string | null
+  decided_by: string | null
+  decision_note: string | null
+  evidence: Json
+  expected_receipt_id: string
+  id: string
+  match_status: string
+  match_type: string
+  suggested_by: string
+  transaction_id: string
+  updated_at: string
+  workspace_id: string
+}
+
+type MatchSetof = {
+  from: "*"
+  to: "reconciliation_matches"
+  isOneToOne: true
+  isSetofReturn: false
+}
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -131,6 +156,359 @@ export type Database = {
           },
         ]
       }
+      expected_receipts: {
+        Row: {
+          archived_at: string | null
+          cancelled_at: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          expected_amount_minor: number
+          expected_date: string
+          id: string
+          is_demo: boolean
+          notes: string | null
+          payer_name: string
+          reference: string
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          expected_amount_minor: number
+          expected_date: string
+          id?: string
+          is_demo?: boolean
+          notes?: string | null
+          payer_name: string
+          reference: string
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          expected_amount_minor?: number
+          expected_date?: string
+          id?: string
+          is_demo?: boolean
+          notes?: string | null
+          payer_name?: string
+          reference?: string
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expected_receipts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_transactions: {
+        Row: {
+          amount_minor: number
+          counterparty_name: string | null
+          currency: string
+          direction: string
+          first_synced_at: string
+          global_account_id: string | null
+          id: string
+          is_sandbox_simulation: boolean
+          last_synced_at: string
+          occurred_at: string | null
+          provider: string
+          provider_reference: string | null
+          provider_status: string
+          provider_transaction_id: string
+          provider_type: string | null
+          raw_sanitized: Json
+          source_kind: string
+          statement_reference: string | null
+          sync_run_id: string | null
+          workspace_id: string
+        }
+        Insert: {
+          amount_minor: number
+          counterparty_name?: string | null
+          currency: string
+          direction: string
+          first_synced_at?: string
+          global_account_id?: string | null
+          id?: string
+          is_sandbox_simulation?: boolean
+          last_synced_at?: string
+          occurred_at?: string | null
+          provider?: string
+          provider_reference?: string | null
+          provider_status: string
+          provider_transaction_id: string
+          provider_type?: string | null
+          raw_sanitized?: Json
+          source_kind: string
+          statement_reference?: string | null
+          sync_run_id?: string | null
+          workspace_id: string
+        }
+        Update: {
+          amount_minor?: number
+          counterparty_name?: string | null
+          currency?: string
+          direction?: string
+          first_synced_at?: string
+          global_account_id?: string | null
+          id?: string
+          is_sandbox_simulation?: boolean
+          last_synced_at?: string
+          occurred_at?: string | null
+          provider?: string
+          provider_reference?: string | null
+          provider_status?: string
+          provider_transaction_id?: string
+          provider_type?: string | null
+          raw_sanitized?: Json
+          source_kind?: string
+          statement_reference?: string | null
+          sync_run_id?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_sync_run_id_fkey"
+            columns: ["sync_run_id"]
+            isOneToOne: false
+            referencedRelation: "sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      obligations: {
+        Row: {
+          allow_partial_payment: boolean
+          amount_minor: number
+          archived_at: string | null
+          beneficiary_id: string | null
+          beneficiary_label: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string
+          due_date: string
+          id: string
+          invoice_reference: string | null
+          is_demo: boolean
+          notes: string | null
+          payee_name: string
+          priority: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+          workspace_id: string
+        }
+        Insert: {
+          allow_partial_payment?: boolean
+          amount_minor: number
+          archived_at?: string | null
+          beneficiary_id?: string | null
+          beneficiary_label?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          description: string
+          due_date: string
+          id?: string
+          invoice_reference?: string | null
+          is_demo?: boolean
+          notes?: string | null
+          payee_name: string
+          priority: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          workspace_id: string
+        }
+        Update: {
+          allow_partial_payment?: boolean
+          amount_minor?: number
+          archived_at?: string | null
+          beneficiary_id?: string | null
+          beneficiary_label?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string
+          due_date?: string
+          id?: string
+          invoice_reference?: string | null
+          is_demo?: boolean
+          notes?: string | null
+          payee_name?: string
+          priority?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obligations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliation_matches: {
+        Row: MatchRow
+        Insert: {
+          applied_amount_minor?: number | null
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          evidence?: Json
+          expected_receipt_id: string
+          id?: string
+          match_status?: string
+          match_type: string
+          suggested_by?: string
+          transaction_id: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          applied_amount_minor?: number | null
+          confidence?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          evidence?: Json
+          expected_receipt_id?: string
+          id?: string
+          match_status?: string
+          match_type?: string
+          suggested_by?: string
+          transaction_id?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_matches_expected_receipt_id_fkey"
+            columns: ["expected_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "expected_receipt_progress"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_expected_receipt_id_fkey"
+            columns: ["expected_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "expected_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_application"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sandbox_simulations: {
+        Row: {
+          amount_minor: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          global_account_id: string | null
+          id: string
+          kind: string
+          payer_name: string | null
+          provider_object_id: string
+          provider_status: string | null
+          reference: string | null
+          workspace_id: string
+        }
+        Insert: {
+          amount_minor: number
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          global_account_id?: string | null
+          id?: string
+          kind: string
+          payer_name?: string | null
+          provider_object_id: string
+          provider_status?: string | null
+          reference?: string | null
+          workspace_id: string
+        }
+        Update: {
+          amount_minor?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          global_account_id?: string | null
+          id?: string
+          kind?: string
+          payer_name?: string | null
+          provider_object_id?: string
+          provider_status?: string | null
+          reference?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_simulations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_runs: {
         Row: {
           error_code: string | null
@@ -210,9 +588,98 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      expected_receipt_progress: {
+        Row: {
+          archived_at: string | null
+          cancelled_at: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          expected_amount_minor: number | null
+          expected_date: string | null
+          id: string | null
+          is_demo: boolean | null
+          notes: string | null
+          open_review_count: number | null
+          open_suggestion_count: number | null
+          outstanding_amount_minor: number | null
+          payer_name: string | null
+          received_amount_minor: number | null
+          reference: string | null
+          updated_at: string | null
+          updated_by: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expected_receipts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_application: {
+        Row: {
+          amount_minor: number | null
+          applied_amount_minor: number | null
+          counterparty_name: string | null
+          currency: string | null
+          direction: string | null
+          first_synced_at: string | null
+          global_account_id: string | null
+          id: string | null
+          is_sandbox_simulation: boolean | null
+          last_synced_at: string | null
+          occurred_at: string | null
+          open_review_count: number | null
+          open_suggestion_count: number | null
+          provider: string | null
+          provider_reference: string | null
+          provider_status: string | null
+          provider_transaction_id: string | null
+          provider_type: string | null
+          raw_sanitized: Json | null
+          source_kind: string | null
+          statement_reference: string | null
+          sync_run_id: string | null
+          unapplied_amount_minor: number | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_sync_run_id_fkey"
+            columns: ["sync_run_id"]
+            isOneToOne: false
+            referencedRelation: "sync_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      confirm_reconciliation_match: {
+        Args: { p_match_id: string; p_note?: string }
+        Returns: MatchRow
+        SetofOptions: MatchSetof
+      }
+      create_manual_match: {
+        Args: {
+          p_expected_receipt_id: string
+          p_note?: string
+          p_transaction_id: string
+        }
+        Returns: MatchRow
+        SetofOptions: MatchSetof
+      }
       ensure_workspace: {
         Args: { p_name?: string }
         Returns: {
@@ -228,6 +695,25 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      reject_reconciliation_match: {
+        Args: { p_match_id: string; p_note?: string }
+        Returns: MatchRow
+        SetofOptions: MatchSetof
+      }
+      reverse_reconciliation_match: {
+        Args: { p_match_id: string; p_note?: string }
+        Returns: MatchRow
+        SetofOptions: MatchSetof
+      }
+      upsert_provider_transactions: {
+        Args: { p_rows: Json; p_sync_run_id: string; p_workspace_id: string }
+        Returns: {
+          external_id: string
+          inserted: boolean
+          status_changed: boolean
+          transaction_id: string
+        }[]
       }
     }
     Enums: {

@@ -48,6 +48,22 @@ const EVENT_LABEL: Record<string, string> = {
   "auth.signed_in": "Signed in",
   "balances.refreshed": "Balances refreshed",
   "balances.refresh_failed": "Balance refresh failed",
+  "transactions.synced": "Deposits synced",
+  "transactions.sync_failed": "Deposit sync failed",
+  "reconciliation.suggestions_generated": "Matches suggested",
+  "reconciliation.match_confirmed": "Match confirmed",
+  "reconciliation.match_rejected": "Match rejected",
+  "reconciliation.match_reversed": "Match reversed",
+  "receipt.created": "Receipt added",
+  "receipt.updated": "Receipt updated",
+  "receipt.cancelled": "Receipt cancelled",
+  "receipt.archived": "Receipt archived",
+  "obligation.created": "Obligation added",
+  "obligation.updated": "Obligation updated",
+  "obligation.archived": "Obligation archived",
+  "obligation.restored": "Obligation restored",
+  "sandbox.deposit_simulated": "Sandbox deposit simulated",
+  "sandbox.deposit_simulation_failed": "Deposit simulation failed",
 };
 
 function eventLabel(eventType: string) {

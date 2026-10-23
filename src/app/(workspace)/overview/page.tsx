@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { DataFreshness, LocalDateTime } from "@/components/common/freshness";
+import { AttentionAndForecast, AttentionSkeleton } from "@/components/dashboard/attention";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { RefreshBalancesButton } from "@/components/dashboard/refresh-balances-button";
 import { PageContainer, PageHeader } from "@/components/layout/page";
@@ -35,6 +36,9 @@ export default function OverviewPage() {
       />
       <Suspense fallback={<BalancesSkeleton />}>
         <BalancesSection />
+      </Suspense>
+      <Suspense fallback={<AttentionSkeleton />}>
+        <AttentionAndForecast />
       </Suspense>
     </PageContainer>
   );

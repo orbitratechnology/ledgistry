@@ -6,3 +6,4 @@ export {
   MoneyPrecisionError,
   parseMinor,
 } from "./minor-units";
+export { parseAmountInput, type AmountParseResult } from "./parse-input";

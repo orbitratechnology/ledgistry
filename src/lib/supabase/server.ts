@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
+import { io } from "next/cache";
 import { cookies } from "next/headers";
 
 import type { Database } from "@/lib/db/database.types";
@@ -11,6 +12,9 @@ export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 /** Request-scoped Supabase client acting as the signed-in user (RLS applies). */
 export async function createClient() {
   const cookieStore = await cookies();
+  // supabase-js reads the clock (token expiry) and every query is per-user financial data:
+  // keep all of it out of prerendered and prefetched shells.
+  await io();
   const { url, key } = getSupabasePublicConfig();
 
   return createServerClient<Database>(url, key, {

@@ -24,7 +24,9 @@ export async function loadMatchingInputs({ supabase, workspace }: WorkspaceConte
       .eq("direction", "credit"),
     supabase
       .from("expected_receipt_progress")
-      .select("id, currency, reference, payer_name, expected_date, outstanding:outstanding_amount_minor::text")
+      .select(
+        "id, currency, reference, payer_name, expected_date, expected:expected_amount_minor::text, outstanding:outstanding_amount_minor::text",
+      )
       .eq("workspace_id", workspace.id)
       .is("cancelled_at", null)
       .is("archived_at", null),
@@ -71,7 +73,9 @@ export async function loadMatchingInputs({ supabase, workspace }: WorkspaceConte
   const decidedPairs = pairsWith(["confirmed", "rejected", "reversed"]);
   const openPairs = pairsWith(["suggested", "needs_review"]);
 
-  return { matchable, openReceipts, decidedPairs, openPairs };
+  const expectedById = new Map(receipts.data.map((row) => [row.id!, parseMinor(row.expected) ?? 0n]));
+
+  return { matchable, openReceipts, decidedPairs, openPairs, expectedById };
 }
 
 /**

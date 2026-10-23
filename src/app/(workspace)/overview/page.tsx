@@ -7,6 +7,7 @@ import { DataFreshness, LocalDateTime } from "@/components/common/freshness";
 import { AttentionAndForecast, AttentionSkeleton } from "@/components/dashboard/attention";
 import { BalanceCards } from "@/components/dashboard/balance-cards";
 import { RefreshBalancesButton } from "@/components/dashboard/refresh-balances-button";
+import { CashPlanSection, CashPlanSkeleton } from "@/components/planner/cash-plan";
 import { PageContainer, PageHeader } from "@/components/layout/page";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -31,11 +32,14 @@ export default function OverviewPage() {
     <PageContainer>
       <PageHeader
         title="Cash position"
-        description="Actual balances read from Airwallex Sandbox, per currency. Expected receipts and planned payments are never counted as available cash."
+        description="Actual balances read from Airwallex Sandbox, per currency, and the cash plan built on them. Expected receipts and planned payments are never counted as available cash."
         actions={<RefreshBalancesButton />}
       />
       <Suspense fallback={<BalancesSkeleton />}>
         <BalancesSection />
+      </Suspense>
+      <Suspense fallback={<CashPlanSkeleton />}>
+        <CashPlanSection />
       </Suspense>
       <Suspense fallback={<AttentionSkeleton />}>
         <AttentionAndForecast />

@@ -92,6 +92,14 @@ export const receiptFormSchema = z
 
 export type ReceiptFormValues = z.output<typeof receiptFormSchema>;
 
+/** A protected reserve per currency. Switching protection off is a separate, confirmed action. */
+export const reserveFormSchema = z
+  .object({
+    currency,
+    amount: z.string(),
+  })
+  .transform(withAmount);
+
 export const simulateDepositSchema = z
   .object({
     globalAccountId: z.uuid("Choose a Global Account."),

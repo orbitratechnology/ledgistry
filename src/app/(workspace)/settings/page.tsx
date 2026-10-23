@@ -10,6 +10,7 @@ import { Suspense } from "react";
 
 import { LocalDateTime } from "@/components/common/freshness";
 import { PageContainer, PageHeader } from "@/components/layout/page";
+import { ReservesCard } from "@/components/settings/reserves-card";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -24,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { readServerEnv } from "@/lib/env";
 import { checkAirwallexConnection, type ConnectionState } from "@/server/airwallex/connection";
 import { requireWorkspace } from "@/server/auth/session";
+import { listReservePolicies } from "@/server/planner/inputs";
 import { RecheckConnectionButton } from "./recheck-button";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -45,9 +47,12 @@ export default function SettingsPage() {
     <PageContainer>
       <PageHeader
         title="Settings"
-        description="Workspace basics, the Airwallex Sandbox connection and the controls that keep it safe."
+        description="Protected reserves, the Airwallex Sandbox connection and the controls that keep it safe."
       />
       <div className="grid grid-cols-1 gap-4 @4xl/main:grid-cols-2">
+        <Suspense fallback={<CardSkeleton />}>
+          <Reserves />
+        </Suspense>
         <Suspense fallback={<CardSkeleton />}>
           <ConnectionCard />
         </Suspense>
@@ -58,6 +63,11 @@ export default function SettingsPage() {
       </div>
     </PageContainer>
   );
+}
+
+async function Reserves() {
+  const context = await requireWorkspace();
+  return <ReservesCard reserves={await listReservePolicies(context)} />;
 }
 
 function DetailList({ items }: { items: { term: string; value: React.ReactNode }[] }) {
@@ -167,7 +177,9 @@ function SafetyCard() {
     "Only the exact sandbox host is accepted while sandbox-only mode is on.",
     "Balances come from Airwallex reads; nothing is estimated or filled in.",
     "Expected receipts are forecasts and are never added to available cash.",
-    "Every refresh, failure and sign-in is written to an append-only audit trail.",
+    "The cash plan is calculated by deterministic code; AI may explain it but never sets an amount.",
+    "Plans are immutable versions tied to the balance snapshot and reserve they used.",
+    "Every refresh, plan, decision and failure is written to an append-only audit trail.",
   ];
   return (
     <Card className="@4xl/main:col-span-2">

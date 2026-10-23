@@ -64,6 +64,18 @@ const EVENT_LABEL: Record<string, string> = {
   "obligation.restored": "Obligation restored",
   "sandbox.deposit_simulated": "Sandbox deposit simulated",
   "sandbox.deposit_simulation_failed": "Deposit simulation failed",
+  "plan.generated": "Cash plan calculated",
+  "plan.recalculation_failed": "Plan recalculation failed",
+  "reserve.created": "Reserve set",
+  "reserve.updated": "Reserve changed",
+  "reserve.enabled": "Reserve protection on",
+  "reserve.disabled": "Reserve protection off",
+  "ai.plan_explained": "AI explained a plan",
+  "ai.plan_explanation_failed": "AI explanation unavailable",
+  "ai.match_suggested": "AI match suggestion",
+  "ai.match_suggestion_failed": "AI match suggestion failed",
+  "ai.receipt_extracted": "AI read pasted text",
+  "ai.receipt_extraction_failed": "AI could not read pasted text",
 };
 
 function eventLabel(eventType: string) {

@@ -88,7 +88,14 @@ type Scored = {
   dayOffset: number | null;
 };
 
-function score(txn: MatchableTransaction, receipt: MatchableReceipt): Scored | null {
+/**
+ * Evidence for one deposit/receipt pair, with whether the rules would propose it. Also used to
+ * verify AI suggestions: the signals shown are always these computed ones, never the model's.
+ */
+export function evaluatePair(
+  txn: MatchableTransaction,
+  receipt: MatchableReceipt,
+): (Scored & { eligible: boolean }) | null {
   if (txn.currency !== receipt.currency) return null;
   if (txn.unappliedMinor <= 0n || receipt.outstandingMinor <= 0n) return null;
 
@@ -131,9 +138,19 @@ function score(txn: MatchableTransaction, receipt: MatchableReceipt): Scored | n
     has("reference_match") ||
     (has("amount_match") && (has("payer_similarity") || has("date_proximity"))) ||
     (has("payer_similarity") && (has("amount_match") || has("partial_amount")));
-  if (!eligible || total < MIN_SCORE) return null;
+  return {
+    receipt,
+    score: Math.min(1, Number(total.toFixed(3))),
+    signals,
+    payerScore,
+    dayOffset,
+    eligible: eligible && total >= MIN_SCORE,
+  };
+}
 
-  return { receipt, score: Math.min(1, Number(total.toFixed(3))), signals, payerScore, dayOffset };
+function score(txn: MatchableTransaction, receipt: MatchableReceipt): Scored | null {
+  const evaluated = evaluatePair(txn, receipt);
+  return evaluated?.eligible ? evaluated : null;
 }
 
 function explain(txn: MatchableTransaction, candidate: Scored, discrepancy: Discrepancy): string {

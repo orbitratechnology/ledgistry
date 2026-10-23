@@ -1,6 +1,6 @@
-import { LandmarkIcon, Undo2Icon } from "lucide-react";
+import { LandmarkIcon, SparklesIcon, Undo2Icon } from "lucide-react";
 
-import { reverseMatchAction } from "@/app/(workspace)/reconciliation/actions";
+import { aiSuggestMatchAction, reverseMatchAction } from "@/app/(workspace)/reconciliation/actions";
 import { ActionButton } from "@/components/common/action-button";
 import { ProviderStatusBadge, SandboxBadge, TransactionStateBadge } from "@/components/common/badges";
 import { LocalDateTime } from "@/components/common/freshness";
@@ -66,6 +66,9 @@ export function DepositsList({
         );
         const choices = receiptChoices(txn, receipts);
         const canMatch = txn.providerStatus === "SETTLED" && txn.unappliedMinor > 0n;
+        // AI is a second opinion only where the rules left nothing to review.
+        const canAskAi =
+          txn.unappliedMinor > 0n && choices.length > 0 && (txn.state === "unmatched" || txn.state === "partially_matched");
         return (
           <li key={txn.id}>
             <Card size="sm" data-testid="deposit-card">
@@ -143,13 +146,26 @@ export function DepositsList({
                     })}
                   </ul>
                 ) : null}
-                {canMatch ? (
-                  <div className="flex justify-end">
-                    <ManualMatchDialog
-                      transactionId={txn.id}
-                      depositLabel={`${formatMoney(txn.unappliedMinor, txn.currency, txn.exponent)} unapplied from ${txn.counterpartyName ?? "this deposit"}. Only receipts in ${txn.currency} with an outstanding balance are listed.`}
-                      choices={choices}
-                    />
+                {canMatch || canAskAi ? (
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {canAskAi ? (
+                      <ActionButton
+                        action={aiSuggestMatchAction.bind(null, txn.id)}
+                        variant="outline"
+                        size="sm"
+                        icon={<SparklesIcon data-icon="inline-start" />}
+                        successTitle="AI suggestion"
+                      >
+                        Ask AI for a match
+                      </ActionButton>
+                    ) : null}
+                    {canMatch ? (
+                      <ManualMatchDialog
+                        transactionId={txn.id}
+                        depositLabel={`${formatMoney(txn.unappliedMinor, txn.currency, txn.exponent)} unapplied from ${txn.counterpartyName ?? "this deposit"}. Only receipts in ${txn.currency} with an outstanding balance are listed.`}
+                        choices={choices}
+                      />
+                    ) : null}
                   </div>
                 ) : null}
               </CardContent>

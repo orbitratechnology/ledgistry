@@ -39,7 +39,8 @@ function sumByCurrency(rows: { currency: string; exponent: number; minor: bigint
     .map(([currency, total]) => ({ currency, label: formatMoney(total.minor, currency, total.exponent) }));
 }
 
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+const plural = (count: number, word: string) =>
+  `${count} ${word}${count === 1 ? "" : /(s|sh|ch|x)$/.test(word) ? "es" : "s"}`;
 
 /** What needs the operator now, plus forecast figures kept apart from actual cash. */
 export async function AttentionAndForecast() {

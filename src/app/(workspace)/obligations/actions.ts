@@ -15,6 +15,7 @@ import { recordAuditEvent } from "@/server/audit/record";
 import { requireWorkspace } from "@/server/auth/session";
 import { listBeneficiaries } from "@/server/airwallex/beneficiaries";
 import { getAirwallexClient } from "@/server/airwallex/client";
+import { recalculatePlans } from "@/server/planner/recalculate";
 
 const idSchema = z.uuid();
 
@@ -87,6 +88,7 @@ export async function saveObligationAction(_previous: FormState, formData: FormD
       summary: `Created obligation to ${input.payeeName}: ${amountLabel} due ${input.dueDate} (${PRIORITY_LABEL[input.priority]}).`,
       metadata: { amount_minor: record.amount_minor, currency: input.currency, priority: input.priority },
     });
+    await recalculatePlans(context, "obligation_change");
     refresh();
     return { ok: true, message: beneficiary.warning ?? "Obligation created." };
   }
@@ -124,12 +126,14 @@ export async function saveObligationAction(_previous: FormState, formData: FormD
           }.`,
     metadata: { changed_fields: changed, version: after.version, status: input.status },
   });
+  await recalculatePlans(context, "obligation_change");
   refresh();
   return { ok: true, message: beneficiary.warning ?? "Obligation updated." };
 }
 
 async function setArchived(id: string, archived: boolean): Promise<{ ok: boolean; message: string }> {
-  const { supabase, workspace, user } = await requireWorkspace();
+  const context = await requireWorkspace();
+  const { supabase, workspace, user } = context;
   if (!idSchema.safeParse(id).success) return { ok: false, message: "Obligation not found." };
 
   const { data, error } = await supabase
@@ -149,6 +153,7 @@ async function setArchived(id: string, archived: boolean): Promise<{ ok: boolean
     outcome: "success",
     summary: `${archived ? "Archived" : "Restored"} obligation to ${data.payee_name} (${OBLIGATION_STATUS_LABEL[data.status as ObligationStatus]}).`,
   });
+  await recalculatePlans(context, "obligation_change");
   refresh();
   return { ok: true, message: archived ? "Obligation archived." : "Obligation restored." };
 }

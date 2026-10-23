@@ -64,8 +64,12 @@ function ReviewCard({
           <span className="text-sm font-normal text-muted-foreground">· {receipt.reference}</span>
         </CardTitle>
         <CardDescription>
-          {match.suggestedBy === "rules" ? "Proposed by deterministic matching rules" : "Proposed"} ·
-          suggestion only — nothing is applied until you confirm.
+          {match.suggestedBy === "rules"
+            ? "Proposed by deterministic matching rules"
+            : match.suggestedBy === "ai"
+              ? "Suggested by AI (Claude); signals and score are recomputed by the rules"
+              : "Proposed"}{" "}
+          · suggestion only — nothing is applied until you confirm.
         </CardDescription>
         <CardAction>
           <Badge variant={match.status === "needs_review" ? "warning" : "info"}>

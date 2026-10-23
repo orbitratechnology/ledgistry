@@ -302,6 +302,76 @@ export type Database = {
           },
         ]
       }
+      financial_plans: {
+        Row: {
+          balance_snapshot_id: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          plan_inputs_hash: string
+          plan_results: Json
+          plan_version: number
+          policy_snapshot: Json
+          previous_plan_id: string | null
+          recalc_reason: string
+          rule_version: string
+          workspace_id: string
+        }
+        Insert: {
+          balance_snapshot_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          id?: string
+          plan_inputs_hash: string
+          plan_results: Json
+          plan_version: number
+          policy_snapshot: Json
+          previous_plan_id?: string | null
+          recalc_reason: string
+          rule_version: string
+          workspace_id: string
+        }
+        Update: {
+          balance_snapshot_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          plan_inputs_hash?: string
+          plan_results?: Json
+          plan_version?: number
+          policy_snapshot?: Json
+          previous_plan_id?: string | null
+          recalc_reason?: string
+          rule_version?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_plans_balance_snapshot_id_fkey"
+            columns: ["balance_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "balance_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_plans_previous_plan_id_fkey"
+            columns: ["previous_plan_id"]
+            isOneToOne: false
+            referencedRelation: "financial_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_plans_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       obligations: {
         Row: {
           allow_partial_payment: boolean
@@ -382,6 +452,60 @@ export type Database = {
           },
         ]
       }
+      plan_explanations: {
+        Row: {
+          attempts: number
+          content: Json | null
+          created_at: string
+          failure_kind: string | null
+          id: string
+          model_id: string | null
+          plan_id: string
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          attempts?: number
+          content?: Json | null
+          created_at?: string
+          failure_kind?: string | null
+          id?: string
+          model_id?: string | null
+          plan_id: string
+          status: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          attempts?: number
+          content?: Json | null
+          created_at?: string
+          failure_kind?: string | null
+          id?: string
+          model_id?: string | null
+          plan_id?: string
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_explanations_plan_id_workspace_id_fkey"
+            columns: ["plan_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "financial_plans"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "plan_explanations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reconciliation_matches: {
         Row: MatchRow
         Insert: {
@@ -449,6 +573,50 @@ export type Database = {
           },
           {
             foreignKeyName: "reconciliation_matches_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reserve_policies: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          currency: string
+          enabled: boolean
+          id: string
+          reserve_amount_minor: number
+          updated_at: string
+          updated_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          enabled?: boolean
+          id?: string
+          reserve_amount_minor: number
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          enabled?: boolean
+          id?: string
+          reserve_amount_minor?: number
+          updated_at?: string
+          updated_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reserve_policies_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -695,6 +863,24 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      record_financial_plan: {
+        Args: {
+          p_balance_snapshot_id: string | null
+          p_currency: string
+          p_inputs_hash: string
+          p_policy_snapshot: Json
+          p_reason: string
+          p_results: Json
+          p_rule_version: string
+          p_summary: string
+          p_workspace_id: string
+        }
+        Returns: {
+          created: boolean
+          plan_id: string
+          plan_version: number
+        }[]
       }
       reject_reconciliation_match: {
         Args: { p_match_id: string; p_note?: string }

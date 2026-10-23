@@ -12,11 +12,16 @@ import {
   type FormState,
 } from "@/lib/validation/forms";
 import { recordAuditEvent } from "@/server/audit/record";
-import { requireWorkspace } from "@/server/auth/session";
+import { requireWorkspace, type WorkspaceContext } from "@/server/auth/session";
 import { getAirwallexClient } from "@/server/airwallex/client";
 import { AirwallexError } from "@/server/airwallex/errors";
 import { listGlobalAccounts } from "@/server/airwallex/global-accounts";
 import { simulateDeposit } from "@/server/airwallex/simulation";
+import { extractReceiptEvidence } from "@/server/ai/tasks";
+import type { ReceiptEvidenceSuggestion } from "@/server/ai/schemas";
+import { refreshBalances } from "@/server/balances/sync";
+import { recalculatePlans } from "@/server/planner/recalculate";
+import { suggestMatchesWithAi } from "@/server/reconciliation/ai-suggestions";
 import { generateSuggestions } from "@/server/reconciliation/suggestions";
 import { syncTransactions } from "@/server/reconciliation/sync";
 
@@ -27,9 +32,23 @@ const noteSchema = z.string().trim().max(500).optional().transform((value) => va
 
 // Evidence ---------------------------------------------------------------------------
 
+/**
+ * New deposits change actual cash, so evidence syncs also refresh balances from Airwallex and
+ * recalculate the plan. Returns warnings instead of failing the sync itself.
+ */
+async function refreshCashAndPlan(context: WorkspaceContext): Promise<string[]> {
+  const balances = await refreshBalances(context);
+  const plan = await recalculatePlans(context, "transaction_sync");
+  return [
+    ...(balances.ok ? [] : [`Balances were not refreshed: ${balances.message}`]),
+    ...(plan.ok ? [] : [plan.message]),
+  ];
+}
+
 export async function syncTransactionsAction(): Promise<ActionResult> {
   const context = await requireWorkspace();
   const result = await syncTransactions(context);
+  const cashWarnings = result.ok ? await refreshCashAndPlan(context) : [];
   refresh();
   if (!result.ok) return result;
   const suggestionText =
@@ -39,7 +58,7 @@ export async function syncTransactionsAction(): Promise<ActionResult> {
   return {
     ok: true,
     message: `Synced ${result.total} deposit${result.total === 1 ? "" : "s"} from Airwallex (${result.imported} new).${suggestionText}`,
-    warnings: result.warnings,
+    warnings: [...result.warnings, ...cashWarnings],
   };
 }
 
@@ -130,13 +149,14 @@ export async function simulateDepositAction(_previous: FormState, formData: Form
   }
 
   const sync = await syncTransactions(context, { awaitDepositId: depositId });
+  const warnings = sync.ok ? [...sync.warnings, ...(await refreshCashAndPlan(context))] : [];
   refresh();
   return {
     ok: true,
     message: !sync.ok
       ? `Sandbox deposit created, but the sync failed: ${sync.message}`
-      : sync.warnings.length > 0
-        ? `Sandbox deposit created. ${sync.warnings.join(" ")}`
+      : warnings.length > 0
+        ? `Sandbox deposit created. ${warnings.join(" ")}`
         : "Sandbox deposit created and synced. Review any suggested match.",
   };
 }
@@ -186,6 +206,7 @@ export async function saveReceiptAction(_previous: FormState, formData: FormData
   });
 
   const suggestions = await generateSuggestions(context);
+  await recalculatePlans(context, "receipt_change");
   refresh();
   return {
     ok: true,
@@ -201,7 +222,8 @@ async function updateReceiptFlag(
   eventType: string,
   verb: string,
 ): Promise<ActionResult> {
-  const { supabase, workspace, user } = await requireWorkspace();
+  const context = await requireWorkspace();
+  const { supabase, workspace, user } = context;
   if (!idSchema.safeParse(id).success) return { ok: false, message: "Receipt not found." };
   const { data, error } = await supabase
     .from("expected_receipts")
@@ -220,6 +242,7 @@ async function updateReceiptFlag(
     outcome: "info",
     summary: `${verb} expected receipt ${data.reference} from ${data.payer_name}.`,
   });
+  await recalculatePlans(context, "receipt_change");
   refresh();
   return { ok: true, message: `Receipt ${verb.toLowerCase()}.` };
 }
@@ -239,9 +262,10 @@ function decisionError(error: { message?: string } | null): string {
 }
 
 export async function confirmMatchAction(matchId: string): Promise<ActionResult> {
-  const { supabase } = await requireWorkspace();
+  const context = await requireWorkspace();
   if (!idSchema.safeParse(matchId).success) return { ok: false, message: "Match not found." };
-  const { error } = await supabase.rpc("confirm_reconciliation_match", { p_match_id: matchId });
+  const { error } = await context.supabase.rpc("confirm_reconciliation_match", { p_match_id: matchId });
+  if (!error) await recalculatePlans(context, "match_decision");
   refresh();
   return error ? { ok: false, message: decisionError(error) } : { ok: true, message: "Match confirmed." };
 }
@@ -261,13 +285,14 @@ export async function rejectMatchAction(matchId: string, note?: string): Promise
 }
 
 export async function reverseMatchAction(matchId: string, note?: string): Promise<ActionResult> {
-  const { supabase } = await requireWorkspace();
+  const context = await requireWorkspace();
   if (!idSchema.safeParse(matchId).success) return { ok: false, message: "Match not found." };
   const parsedNote = noteSchema.safeParse(note);
-  const { error } = await supabase.rpc("reverse_reconciliation_match", {
+  const { error } = await context.supabase.rpc("reverse_reconciliation_match", {
     p_match_id: matchId,
     p_note: parsedNote.success ? (parsedNote.data ?? undefined) : undefined,
   });
+  if (!error) await recalculatePlans(context, "match_decision");
   refresh();
   return error
     ? { ok: false, message: decisionError(error) }
@@ -275,16 +300,55 @@ export async function reverseMatchAction(matchId: string, note?: string): Promis
 }
 
 export async function manualMatchAction(transactionId: string, receiptId: string): Promise<ActionResult> {
-  const { supabase } = await requireWorkspace();
+  const context = await requireWorkspace();
   if (!idSchema.safeParse(transactionId).success || !idSchema.safeParse(receiptId).success) {
     return { ok: false, message: "Choose a deposit and a receipt." };
   }
-  const { error } = await supabase.rpc("create_manual_match", {
+  const { error } = await context.supabase.rpc("create_manual_match", {
     p_transaction_id: transactionId,
     p_expected_receipt_id: receiptId,
   });
+  if (!error) await recalculatePlans(context, "match_decision");
   refresh();
   return error
     ? { ok: false, message: decisionError(error) }
     : { ok: true, message: "Deposit applied to the receipt." };
+}
+
+// AI assistance (suggestions only; never confirms, applies or pays) ------------------------
+
+export async function aiSuggestMatchAction(transactionId: string): Promise<ActionResult> {
+  const context = await requireWorkspace();
+  if (!idSchema.safeParse(transactionId).success) return { ok: false, message: "Deposit not found." };
+  const result = await suggestMatchesWithAi(context, transactionId);
+  refresh();
+  return result;
+}
+
+const pastedTextSchema = z.string().trim().min(10, "Paste a few lines of text first.").max(4000, "Paste at most 4,000 characters.");
+
+export type ExtractReceiptResult =
+  | { ok: true; suggestion: ReceiptEvidenceSuggestion }
+  | { ok: false; message: string };
+
+/** Reads pasted remittance text into suggested form values. Nothing is saved until the operator submits. */
+export async function extractReceiptEvidenceAction(text: string): Promise<ExtractReceiptResult> {
+  const { supabase, workspace, user } = await requireWorkspace();
+  const parsed = pastedTextSchema.safeParse(text);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Paste some text first." };
+
+  const result = await extractReceiptEvidence(parsed.data);
+  await recordAuditEvent(supabase, {
+    workspaceId: workspace.id,
+    actor: { type: "user", userId: user.id },
+    eventType: result.ok ? "ai.receipt_extracted" : "ai.receipt_extraction_failed",
+    entityType: "expected_receipt",
+    outcome: result.ok ? "info" : "failure",
+    summary: result.ok
+      ? "Claude pre-filled an expected receipt from pasted text for review. Nothing was saved."
+      : `Could not read the pasted text: ${result.message}`,
+    metadata: result.ok ? { model_id: result.modelId } : { failure_kind: result.kind },
+  });
+  if (!result.ok) return { ok: false, message: `${result.message} Fill in the form manually.` };
+  return { ok: true, suggestion: result.value };
 }

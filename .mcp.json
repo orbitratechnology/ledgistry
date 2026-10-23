@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "next-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@0.4.0"]
+    },
+    "shadcn": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "shadcn@4.22.1", "mcp"]
+    },
+    "airwallex-dev": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@airwallex/developer-mcp@0.3.0-beta.13"],
+      "env": {
+        "AIRWALLEX_SANDBOX_CLIENT_ID": "${AIRWALLEX_CLIENT_ID}",
+        "AIRWALLEX_SANDBOX_API_KEY": "${AIRWALLEX_SECRET}",
+        "DISABLE_TELEMETRY": "true"
+      }
+    }
+  }
+}

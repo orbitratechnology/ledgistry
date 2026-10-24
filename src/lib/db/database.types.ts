@@ -32,6 +32,62 @@ type MatchSetof = {
   isSetofReturn: false
 }
 
+type ApprovalRow = {
+  approved_amount_minor: number
+  approved_at: string | null
+  approved_by: string | null
+  balance_snapshot_id: string | null
+  beneficiary_id: string
+  consumed_at: string | null
+  created_at: string
+  created_by: string | null
+  currency: string
+  expires_at: string
+  id: string
+  obligation_id: string
+  obligation_version: number
+  operation_fingerprint: string
+  plan_id: string | null
+  policy_snapshot: Json
+  reference: string
+  review_snapshot: Json
+  status: string
+  status_reason: string | null
+  transfer_method: string
+  updated_at: string
+  workspace_id: string
+}
+
+type OperationRow = {
+  amount_minor: number
+  approval_id: string
+  beneficiary_id: string
+  completed_at: string | null
+  created_at: string
+  created_by: string | null
+  currency: string
+  failure_code: string | null
+  id: string
+  is_sandbox: boolean
+  last_provider_status: string | null
+  last_verified_at: string | null
+  obligation_id: string
+  operation_fingerprint: string
+  provider: string
+  provider_fee_currency: string | null
+  provider_fee_minor: number | null
+  provider_request_id: string
+  provider_transfer_id: string | null
+  reference: string
+  request_started_at: string
+  safe_error_summary: string | null
+  status: string
+  submitted_at: string | null
+  transfer_method: string
+  updated_at: string
+  workspace_id: string
+}
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -452,6 +508,46 @@ export type Database = {
           },
         ]
       }
+      payment_approvals: {
+        Row: ApprovalRow
+        Insert: Partial<ApprovalRow> &
+          Pick<
+            ApprovalRow,
+            | "approved_amount_minor"
+            | "beneficiary_id"
+            | "currency"
+            | "expires_at"
+            | "obligation_id"
+            | "obligation_version"
+            | "operation_fingerprint"
+            | "policy_snapshot"
+            | "reference"
+            | "review_snapshot"
+            | "transfer_method"
+            | "workspace_id"
+          >
+        Update: Partial<ApprovalRow>
+        Relationships: []
+      }
+      payment_operations: {
+        Row: OperationRow
+        Insert: Partial<OperationRow> &
+          Pick<
+            OperationRow,
+            | "amount_minor"
+            | "approval_id"
+            | "beneficiary_id"
+            | "currency"
+            | "obligation_id"
+            | "operation_fingerprint"
+            | "provider_request_id"
+            | "reference"
+            | "transfer_method"
+            | "workspace_id"
+          >
+        Update: Partial<OperationRow>
+        Relationships: []
+      }
       plan_explanations: {
         Row: {
           attempts: number
@@ -848,6 +944,15 @@ export type Database = {
         Returns: MatchRow
         SetofOptions: MatchSetof
       }
+      approve_payment: {
+        Args: { p_approval_id: string; p_fingerprint: string }
+        Returns: {
+          message: string
+          operation_id: string | null
+          outcome: string
+          request_id: string | null
+        }[]
+      }
       ensure_workspace: {
         Args: { p_name?: string }
         Returns: {
@@ -881,6 +986,36 @@ export type Database = {
           plan_id: string
           plan_version: number
         }[]
+      }
+      open_payment_review: {
+        Args: {
+          p_balance_snapshot_id: string | null
+          p_fingerprint: string
+          p_obligation_id: string
+          p_plan_id: string | null
+          p_policy_snapshot: Json
+          p_reference: string
+          p_review_snapshot: Json
+          p_transfer_method: string
+          p_ttl_minutes: number
+        }
+        Returns: ApprovalRow
+        SetofOptions: { from: "*"; to: "payment_approvals"; isOneToOne: true; isSetofReturn: false }
+      }
+      record_payment_progress: {
+        Args: {
+          p_failure_code: string | null
+          p_fee_currency: string | null
+          p_fee_minor: number | null
+          p_operation_id: string
+          p_provider_status: string | null
+          p_provider_transfer_id: string | null
+          p_safe_summary: string | null
+          p_source: string
+          p_status: string
+        }
+        Returns: OperationRow
+        SetofOptions: { from: "*"; to: "payment_operations"; isOneToOne: true; isSetofReturn: false }
       }
       reject_reconciliation_match: {
         Args: { p_match_id: string; p_note?: string }

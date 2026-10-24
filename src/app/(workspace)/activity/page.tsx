@@ -76,6 +76,17 @@ const EVENT_LABEL: Record<string, string> = {
   "ai.match_suggestion_failed": "AI match suggestion failed",
   "ai.receipt_extracted": "AI read pasted text",
   "ai.receipt_extraction_failed": "AI could not read pasted text",
+  "payment.review_opened": "Payment review opened",
+  "payment.review_blocked": "Payment review blocked",
+  "payment.approved": "Payment approved",
+  "payment.approval_refused": "Approval refused",
+  "payment.status_recorded": "Payment status recorded",
+  "payment.verification_required": "Payment outcome unknown",
+  "payment.completed": "Payment completed",
+  "payment.failed": "Payment failed",
+  "payment.cancelled": "Payment cancelled",
+  "payment.verification_failed": "Payment check failed",
+  "sandbox.transfer_simulated": "Sandbox transfer outcome simulated",
 };
 
 function eventLabel(eventType: string) {

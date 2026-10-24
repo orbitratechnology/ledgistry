@@ -15,24 +15,24 @@ test.describe("reconciliation (sandbox)", () => {
     await signIn(page);
     await page.goto("/reconciliation");
 
-    // 1. Expected receipt (forecast): USD 90.00.
+    // 1. Expected receipt (forecast): HKD 90.00.
     await page.getByRole("button", { name: "Expected receipt" }).first().click();
     const receiptSheet = page.getByRole("dialog", { name: "New expected receipt" });
     await receiptSheet.getByLabel("Payer").fill("Harbor Retail");
     await receiptSheet.getByLabel("Reference", { exact: true }).fill(reference);
     await receiptSheet.getByLabel("Expected amount").fill("90.00");
-    await receiptSheet.getByLabel("Currency").selectOption("USD");
+    await receiptSheet.getByLabel("Currency").selectOption("HKD");
     await receiptSheet.getByLabel("Expected date").fill(today());
     await receiptSheet.getByRole("button", { name: "Add expected receipt" }).click();
     await expect(receiptSheet).toBeHidden({ timeout: 20_000 });
 
-    // 2. Sandbox deposit of USD 45.00 into the USD Global Account, same reference (labelled as a simulation).
+    // 2. Sandbox deposit of HKD 45.00 into the HKD Global Account (USD stays untouched for the demo), same reference (labelled as a simulation).
     await page.getByRole("button", { name: "Simulate deposit" }).click();
     const simulateSheet = page.getByRole("dialog", { name: "Simulate a sandbox deposit" });
     const accountSelect = simulateSheet.getByLabel("Global Account");
-    const usdAccount = await accountSelect.locator("option", { hasText: "receives USD" }).first().getAttribute("value");
-    expect(usdAccount, "a USD Global Account in the sandbox").toBeTruthy();
-    await accountSelect.selectOption(usdAccount!);
+    const hkdAccount = await accountSelect.locator("option", { hasText: "receives HKD" }).first().getAttribute("value");
+    expect(hkdAccount, "an HKD Global Account in the sandbox").toBeTruthy();
+    await accountSelect.selectOption(hkdAccount!);
     await simulateSheet.getByLabel(/^Amount/).fill("45.00");
     await simulateSheet.getByLabel("Payer name").fill("Harbor Retail Ltd");
     await simulateSheet.getByLabel("Reference on the transfer").fill(reference);
@@ -59,13 +59,13 @@ test.describe("reconciliation (sandbox)", () => {
     }).toPass({ timeout: 90_000 });
     await expect(card.getByText("Sandbox simulation")).toBeVisible();
     const preview = card.getByTestId("apply-preview");
-    await expect(preview).toContainText(/USD\s45\.00/);
+    await expect(preview).toContainText(/HKD\s45\.00/);
     await expect(preview).toContainText("will remain outstanding");
 
     // 4. Explicit confirmation through the dialog.
     await card.getByRole("button", { name: "Confirm match" }).click();
     const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toContainText(/Apply USD\s45\.00 to/);
+    await expect(dialog).toContainText(/Apply HKD\s45\.00 to/);
     await dialog.getByRole("button", { name: "Confirm match" }).click();
     await expect(page.getByText("Match confirmed").first()).toBeVisible({ timeout: 20_000 });
 
@@ -85,6 +85,6 @@ test.describe("reconciliation (sandbox)", () => {
 
     // 7. The decision is in the audit trail.
     await page.goto("/activity");
-    await expect(page.getByText(/Applied USD\s45\.00 from Harbor Retail Ltd to receipt/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(/Applied HKD\s45\.00 from Harbor Retail Ltd to receipt/).filter({ visible: true }).first()).toBeVisible();
   });
 });

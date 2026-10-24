@@ -12,6 +12,8 @@ export type PaymentOperationView = {
   currency: string;
   exponent: number;
   reference: string;
+  beneficiaryId: string;
+  transferMethod: string;
   status: PaymentStatus;
   lastProviderStatus: string | null;
   providerRequestId: string;
@@ -28,13 +30,15 @@ export type PaymentOperationView = {
 };
 
 const OPERATION_COLUMNS =
-  "id, obligation_id, currency, reference, status, last_provider_status, provider_request_id, provider_transfer_id, provider_fee_currency, failure_code, safe_error_summary, is_sandbox, request_started_at, submitted_at, last_verified_at, completed_at, amount:amount_minor::text, fee:provider_fee_minor::text, obligations(payee_name)";
+  "id, obligation_id, currency, reference, beneficiary_id, transfer_method, status, last_provider_status, provider_request_id, provider_transfer_id, provider_fee_currency, failure_code, safe_error_summary, is_sandbox, request_started_at, submitted_at, last_verified_at, completed_at, amount:amount_minor::text, fee:provider_fee_minor::text, obligations(payee_name)";
 
 type OperationRow = {
   id: string;
   obligation_id: string;
   currency: string;
   reference: string;
+  beneficiary_id: string;
+  transfer_method: string;
   status: string;
   last_provider_status: string | null;
   provider_request_id: string;
@@ -61,6 +65,8 @@ function toView(row: OperationRow): PaymentOperationView {
     currency: row.currency,
     exponent: currencyExponent(row.currency),
     reference: row.reference,
+    beneficiaryId: row.beneficiary_id,
+    transferMethod: row.transfer_method,
     status: row.status as PaymentStatus,
     lastProviderStatus: row.last_provider_status,
     providerRequestId: row.provider_request_id,

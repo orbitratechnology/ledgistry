@@ -5,7 +5,9 @@ import {
   ChevronRightIcon,
   CircleCheckIcon,
   CircleDotIcon,
+  CircleXIcon,
   ClockIcon,
+  HelpCircleIcon,
   SearchCheckIcon,
   UserRoundXIcon,
   type LucideIcon,
@@ -18,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/lib/money";
 import { requireWorkspace } from "@/server/auth/session";
 import { listObligations } from "@/server/obligations/queries";
+import { listPaymentOperations } from "@/server/payments/queries";
 import { getReconciliationData } from "@/server/reconciliation/queries";
 
 type Item = {
@@ -45,9 +48,10 @@ const plural = (count: number, word: string) =>
 /** What needs the operator now, plus forecast figures kept apart from actual cash. */
 export async function AttentionAndForecast() {
   const context = await requireWorkspace();
-  const [recon, obligations] = await Promise.all([
+  const [recon, obligations, payments] = await Promise.all([
     getReconciliationData(context),
     listObligations(context, { view: "open" }),
+    listPaymentOperations(context, { limit: 50 }),
   ]);
 
   const openMatches = recon.matches.filter((m) => m.status === "suggested" || m.status === "needs_review");
@@ -62,7 +66,30 @@ export async function AttentionAndForecast() {
     (o) => !o.beneficiaryId && (o.status === "planned" || o.status === "draft"),
   );
 
+  // Only each obligation's latest payment counts: a failure followed by a successful retry is resolved.
+  const latestPayments = [...new Map(payments.toReversed().map((p) => [p.obligationId, p])).values()];
+  const unresolvedPayments = latestPayments.filter((p) => p.status === "verification_required" || p.status === "unknown");
+  const failedPayments = latestPayments.filter((p) => p.status === "failed");
+
   const items: Item[] = [];
+  if (unresolvedPayments.length > 0) {
+    items.push({
+      icon: HelpCircleIcon,
+      tone: "destructive",
+      title: `${plural(unresolvedPayments.length, "payment")} with an unknown outcome`,
+      detail: "Check the status with Airwallex before doing anything else; never pay twice.",
+      href: "/obligations",
+    });
+  }
+  if (failedPayments.length > 0) {
+    items.push({
+      icon: CircleXIcon,
+      tone: "warning",
+      title: `${plural(failedPayments.length, "payment")} failed at Airwallex`,
+      detail: "The obligation is open again and can be reviewed for a new payment.",
+      href: "/obligations",
+    });
+  }
   if (openMatches.length > 0) {
     items.push({
       icon: SearchCheckIcon,

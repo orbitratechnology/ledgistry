@@ -14,6 +14,7 @@ import { Suspense } from "react";
 
 import { recalculatePlanAction } from "@/app/(workspace)/overview/actions";
 import { ActionButton } from "@/components/common/action-button";
+import { PaymentReviewSheet } from "@/components/payments/payment-review-sheet";
 import { PriorityBadge, SandboxBadge, OverdueBadge } from "@/components/common/badges";
 import { LocalDateTime } from "@/components/common/freshness";
 import { Money } from "@/components/common/money";
@@ -38,6 +39,7 @@ const REASON_LABEL: Record<string, string> = {
   obligation_change: "after an obligation change",
   receipt_change: "after an expected-receipt change",
   reserve_change: "after a reserve change",
+  payment_update: "after a payment update",
 };
 
 const SECTIONS: { decision: PlanDecision; title: string; description: string; icon: typeof CircleCheckIcon }[] = [
@@ -105,6 +107,11 @@ function PlanItemRow({ item, plan }: { item: PlanItem; plan: PlanResult }) {
       <p className="text-sm" data-testid="plan-reason">
         {item.reason}
       </p>
+      {item.decision === "recommended" ? (
+        <div>
+          <PaymentReviewSheet obligationId={item.obligationId} payee={item.payeeName} />
+        </div>
+      ) : null}
       {forecast ? (
         <p className="text-xs text-muted-foreground" data-testid="plan-forecast-outcome">
           <span className="font-medium">Forecast:</span>{" "}

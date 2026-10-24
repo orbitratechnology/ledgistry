@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { PageContainer, PageHeader } from "@/components/layout/page";
 import { ObligationFilters } from "@/components/obligations/obligation-filters";
 import { ObligationList } from "@/components/obligations/obligation-list";
+import { PaymentsCard } from "@/components/payments/payments-card";
 import { ObligationSheet } from "@/components/obligations/obligation-sheet";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -29,10 +30,13 @@ export default function ObligationsPage({ searchParams }: PageProps<"/obligation
     <PageContainer>
       <PageHeader
         title="Obligations"
-        description="Money you owe, ordered the way the planner will consider it: explicit priority first, then due date. Recording an obligation never sends a payment."
+        description="Money you owe, ordered the way the planner will consider it: explicit priority first, then due date. Recording an obligation never sends a payment; paying one takes a reviewed, explicit approval."
       />
       <Suspense fallback={<ObligationsSkeleton />}>
         <ObligationsSection searchParams={searchParams} />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+        <PaymentsCard limit={10} />
       </Suspense>
     </PageContainer>
   );

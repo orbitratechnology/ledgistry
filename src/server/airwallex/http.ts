@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AirwallexError, kindFromStatus } from "./errors";
+import { AirwallexError, kindFromStatus, type ProviderErrorDetails } from "./errors";
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -25,6 +25,24 @@ export function parseRetryAfter(value: string | null, now = Date.now()): number 
  * One HTTP exchange with Airwallex: explicit timeout, JSON parsing, and mapping of
  * transport failures to typed errors. No retries here — see client.ts.
  */
+const text = (value: unknown) => (typeof value === "string" && value.length <= 200 ? value : null);
+
+/** Identifiers and codes from an error body; provider free text is deliberately dropped. */
+function errorDetails(body: unknown): ProviderErrorDetails | null {
+  if (!body || typeof body !== "object") return null;
+  const record = body as Record<string, unknown>;
+  const details = (record.details && typeof record.details === "object" ? record.details : {}) as Record<string, unknown>;
+  const errors = Array.isArray(details.errors) ? details.errors : [];
+  return {
+    existingId: text(details.id),
+    source: text(record.source),
+    fieldErrors: errors.slice(0, 20).map((error) => {
+      const item = (error && typeof error === "object" ? error : {}) as Record<string, unknown>;
+      return { source: text(item.source), code: text(item.code) };
+    }),
+  };
+}
+
 export async function sendRequest(
   fetchImpl: FetchLike,
   url: string,
@@ -74,6 +92,7 @@ export async function sendRequest(
     throw new AirwallexError(kindFromStatus(response.status), {
       status: response.status,
       providerCode,
+      providerDetails: errorDetails(body),
       correlationId,
       retryAfterMs,
     });

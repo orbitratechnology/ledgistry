@@ -18,14 +18,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatIsoDate } from "@/lib/format";
+import { PaymentReviewSheet } from "@/components/payments/payment-review-sheet";
 import type { ObligationView } from "@/server/obligations/queries";
 import { ObligationSheet, type BeneficiaryOptions } from "./obligation-sheet";
 
 const dateLabel = formatIsoDate;
 
 function Actions({ item, beneficiaries }: { item: ObligationView; beneficiaries: Promise<BeneficiaryOptions> }) {
+  const payable = !item.archived && item.beneficiaryId !== null && ["planned", "failed"].includes(item.status);
   return (
     <div className="flex flex-wrap justify-end gap-1">
+      {payable ? <PaymentReviewSheet obligationId={item.id} payee={item.payeeName} triggerLabel="Pay" variant="outline" /> : null}
       {!item.archived ? (
         <ObligationSheet
           beneficiaries={beneficiaries}

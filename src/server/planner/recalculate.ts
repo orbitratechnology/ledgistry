@@ -16,10 +16,11 @@ export type RecalcReason =
   | "match_decision"
   | "obligation_change"
   | "receipt_change"
-  | "reserve_change";
+  | "reserve_change"
+  | "payment_update";
 
 export type RecalculateResult =
-  | { ok: true; plans: { currency: string; version: number; created: boolean }[] }
+  | { ok: true; plans: { currency: string; planId: string; version: number; created: boolean }[] }
   | { ok: false; message: string };
 
 /** Audit summary; the version number the database assigns is recorded in the event metadata. */
@@ -45,7 +46,7 @@ export async function recalculatePlans(context: WorkspaceContext, reason: Recalc
   const { supabase, workspace, user } = context;
   try {
     const inputs = await loadPlanInputs(context);
-    const plans: { currency: string; version: number; created: boolean }[] = [];
+    const plans: { currency: string; planId: string; version: number; created: boolean }[] = [];
     for (const [currency, planInputs] of inputs) {
       const plan = buildPlan(planInputs);
       const { data, error } = await supabase.rpc("record_financial_plan", {
@@ -66,7 +67,7 @@ export async function recalculatePlans(context: WorkspaceContext, reason: Recalc
         p_summary: planSummary(plan),
       });
       if (error || !data?.[0]) throw new Error(`Could not record the ${currency} plan (${error?.code ?? "no row"})`);
-      plans.push({ currency, version: data[0].plan_version, created: data[0].created });
+      plans.push({ currency, planId: data[0].plan_id, version: data[0].plan_version, created: data[0].created });
     }
     return { ok: true, plans };
   } catch (error) {

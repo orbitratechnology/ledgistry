@@ -109,17 +109,29 @@ test.describe("cash planning", () => {
     await expect(plan.getByTestId("plan-changes")).toContainText(`${low}`);
     await expect(plan.getByTestId("plan-changes")).toContainText("Deferred");
 
-    // 6. The AI card is present and either grounded or honestly unavailable; the plan never depends on it.
+    // 6. A recommended item opens a live payment review; closing it sends nothing (USD is never moved here).
+    await recommended.getByRole("button", { name: `Review payment to ${critical}` }).click();
+    const review = page.getByRole("dialog", { name: `Review payment to ${critical}` });
+    await expect(review.getByText("All checks passed")).toBeVisible({ timeout: 60_000 });
+    await expect(review.getByTestId("review-amount")).toHaveText(/USD\s60\.00/);
+    await review.getByRole("button", { name: "Close without paying" }).click();
+    await expect(review).toBeHidden();
+    await page.goto("/obligations");
+    await expect(page.getByTestId("payment-operation").filter({ hasText: critical })).toHaveCount(0);
+    plan = await usdPlan(page);
+
+    // 7. The AI card is present and either grounded or honestly unavailable; the plan never depends on it.
     const explanation = plan.getByTestId("plan-explanation");
     await expect(explanation).toBeVisible({ timeout: 45_000 });
     await expect(explanation).toHaveAttribute("data-status", /ready|failed/);
 
-    // 7. The trail records plan versions and the reserve change.
+    // 8. The trail records plan versions and the reserve change.
     await page.goto("/activity");
     await expect(page.getByText("Cash plan calculated").filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText(/Reserve (set|changed)/).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText("Payment review closed").filter({ visible: true }).first()).toBeVisible();
 
-    // 8. Clean up the records this test created.
+    // 9. Clean up the records this test created.
     await archiveObligation(page, critical);
     await archiveObligation(page, low);
   });

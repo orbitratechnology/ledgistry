@@ -11,6 +11,7 @@ import { Suspense } from "react";
 
 import { LocalDateTime } from "@/components/common/freshness";
 import { PageContainer, PageHeader } from "@/components/layout/page";
+import { PaymentsCard } from "@/components/payments/payments-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -77,6 +78,7 @@ const EVENT_LABEL: Record<string, string> = {
   "ai.receipt_extracted": "AI read pasted text",
   "ai.receipt_extraction_failed": "AI could not read pasted text",
   "payment.review_opened": "Payment review opened",
+  "payment.review_closed": "Payment review closed",
   "payment.review_blocked": "Payment review blocked",
   "payment.approved": "Payment approved",
   "payment.approval_refused": "Approval refused",
@@ -108,8 +110,11 @@ export default function ActivityPage() {
     <PageContainer>
       <PageHeader
         title="Activity"
-        description="Append-only audit trail of syncs, decisions and provider responses, newest first."
+        description="Payments with their verified Airwallex status, then the append-only audit trail of syncs, decisions and provider responses, newest first."
       />
+      <Suspense fallback={<ActivitySkeleton />}>
+        <PaymentsCard limit={10} />
+      </Suspense>
       <Suspense fallback={<ActivitySkeleton />}>
         <ActivityList />
       </Suspense>

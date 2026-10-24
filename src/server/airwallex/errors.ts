@@ -25,11 +25,23 @@ const OPERATOR_MESSAGES: Record<AirwallexErrorKind, string> = {
   unexpected_response: "Airwallex returned a response Ledgistry could not read safely.",
 };
 
+/**
+ * The parts of a provider error body that drive decisions. Only identifiers and codes are kept:
+ * free-text provider messages are not stored or shown.
+ */
+export type ProviderErrorDetails = {
+  /** e.g. the existing transfer id on `duplicate_request_id`. */
+  existingId: string | null;
+  source: string | null;
+  fieldErrors: { source: string | null; code: string | null }[];
+};
+
 /** Provider failure with an operator-safe message. Raw provider bodies stay server-side. */
 export class AirwallexError extends Error {
   readonly kind: AirwallexErrorKind;
   readonly status: number | null;
   readonly providerCode: string | null;
+  readonly providerDetails: ProviderErrorDetails | null;
   readonly correlationId: string | null;
   readonly retryAfterMs: number | null;
 
@@ -38,6 +50,7 @@ export class AirwallexError extends Error {
     options: {
       status?: number | null;
       providerCode?: string | null;
+      providerDetails?: ProviderErrorDetails | null;
       correlationId?: string | null;
       retryAfterMs?: number | null;
       detail?: string;
@@ -49,6 +62,7 @@ export class AirwallexError extends Error {
     this.kind = kind;
     this.status = options.status ?? null;
     this.providerCode = options.providerCode ?? null;
+    this.providerDetails = options.providerDetails ?? null;
     this.correlationId = options.correlationId ?? null;
     this.retryAfterMs = options.retryAfterMs ?? null;
   }

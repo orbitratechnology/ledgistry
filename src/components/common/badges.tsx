@@ -11,7 +11,9 @@ import {
   CopyIcon,
   FlaskConicalIcon,
   HourglassIcon,
+  HelpCircleIcon,
   LoaderIcon,
+  SendIcon,
   PauseIcon,
   SearchCheckIcon,
   SparklesIcon,
@@ -29,6 +31,7 @@ import {
   type ReceiptState,
   type TransactionMatchState,
 } from "@/lib/finance/states";
+import { PAYMENT_STATUS_LABEL, type PaymentStatus } from "@/lib/payments/status";
 
 type Variant = "default" | "secondary" | "outline" | "success" | "warning" | "info" | "destructive";
 type Config = { label: string; variant: Variant; icon: LucideIcon };
@@ -110,4 +113,20 @@ export function SandboxBadge({ label = "Sandbox simulation" }: { label?: string 
 
 export function OverdueBadge() {
   return <StatusBadge config={{ label: "Overdue", variant: "destructive", icon: ClockIcon }} />;
+}
+
+const PAYMENT: Record<PaymentStatus, Omit<Config, "label">> = {
+  prepared: { variant: "outline", icon: CircleDashedIcon },
+  submitted: { variant: "info", icon: SendIcon },
+  verification_required: { variant: "warning", icon: HelpCircleIcon },
+  pending: { variant: "info", icon: LoaderIcon },
+  completed: { variant: "success", icon: CircleCheckIcon },
+  failed: { variant: "destructive", icon: CircleXIcon },
+  cancelled: { variant: "outline", icon: BanIcon },
+  unknown: { variant: "warning", icon: HelpCircleIcon },
+};
+
+/** "Completed" appears only for a provider-confirmed PAID status (see mapProviderStatus). */
+export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+  return <StatusBadge config={{ ...PAYMENT[status], label: PAYMENT_STATUS_LABEL[status] }} />;
 }

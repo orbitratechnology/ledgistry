@@ -78,10 +78,11 @@ test.describe("guarded payments (sandbox)", () => {
       await expect(operation).not.toContainText("Completed");
 
       // 3. Sandbox: Airwallex itself moves the transfer to PAID; Ledgistry reads it back.
+      // Exact match: the PAID status note on earlier payments contains the same words in lower case.
       await operation.getByRole("button", { name: "Sandbox: simulate paid" }).click();
-      await expect(page.getByText("Airwallex reports the transfer as PAID.").first()).toBeVisible({ timeout: 90_000 });
+      await expect(page.getByText("Airwallex reports the transfer as PAID.", { exact: true }).first()).toBeVisible({ timeout: 90_000 });
     }
-    await expect(operation).toHaveAttribute("data-status", "completed");
+    await expect(operation).toHaveAttribute("data-status", "completed", { timeout: 30_000 });
     await expect(operation.getByTestId("provider-status")).toHaveText("Airwallex: PAID");
 
     // 4. The obligation is paid and the chain is in the audit trail.

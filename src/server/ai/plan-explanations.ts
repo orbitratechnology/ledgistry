@@ -26,6 +26,11 @@ async function generateAndStore(
 ): Promise<PlanExplanationState> {
   const { supabase, workspace, user } = context;
   const result = await explainPlan(plan, version, changes);
+  // AI switched off is configuration, not an outcome for this plan: never cached or audited, so
+  // the plan is explained as soon as AI is configured again.
+  if (!result.ok && result.kind === "disabled") {
+    return { status: "failed", kind: result.kind, message: result.message, attempts: previousAttempts ?? 0 };
+  }
   const attempts = (previousAttempts ?? 0) + 1;
   const row = result.ok
     ? { status: "ready", content: result.value as unknown as Json, failure_kind: null, model_id: result.modelId, attempts }
@@ -77,7 +82,8 @@ export async function getPlanExplanation(
     const parsed = planExplanationSchema.safeParse(data.content);
     if (parsed.success) return { status: "ready", content: parsed.data, modelId: data.model_id };
   }
-  if (data?.status === "failed") {
+  // Older rows may hold a cached "disabled" failure: regenerate those (cheap while AI is still off).
+  if (data?.status === "failed" && data.failure_kind !== "disabled") {
     const kind = isFailureKind(data.failure_kind) ? data.failure_kind : "provider_error";
     return { status: "failed", kind, message: AI_FAILURE_MESSAGE[kind], attempts: data.attempts };
   }

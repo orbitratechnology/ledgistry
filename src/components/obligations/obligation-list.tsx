@@ -92,7 +92,7 @@ function LatestPayment({ operation }: { operation: PaymentOperationView | undefi
   return (
     <a
       href={`#payment-${operation.id}`}
-      className="inline-flex items-center gap-1.5 rounded-md text-xs text-muted-foreground underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      className="inline-flex min-h-6 items-center gap-1.5 rounded-md text-xs text-muted-foreground underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       data-testid="obligation-payment-link"
     >
       <span>Payment</span>

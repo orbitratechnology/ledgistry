@@ -21,6 +21,12 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
         } as React.CSSProperties
       }
     >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-3 focus:ring-ring/50"
+      >
+        Skip to main content
+      </a>
       <AppSidebar
         variant="inset"
         userSlot={
@@ -37,7 +43,7 @@ export default function WorkspaceLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           }
         />
-        <div id="main" className="@container/main flex min-w-0 flex-1 flex-col">
+        <div id="main-content" tabIndex={-1} className="@container/main flex min-w-0 flex-1 flex-col outline-none">
           {children}
         </div>
       </SidebarInset>

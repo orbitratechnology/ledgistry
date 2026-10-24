@@ -77,7 +77,7 @@
   --muted-foreground: oklch(0.53 0.02 256);
   --accent: oklch(0.961 0.003 264.5);
   --accent-foreground: oklch(0.229 0.009 255.6);
-  --destructive: oklch(0.576 0.209 29.5);
+  --destructive: oklch(0.54 0.209 29.5);
   --destructive-muted: oklch(0.971 0.013 17.4);
   --success: oklch(0.499 0.117 157.1);
   --success-muted: oklch(0.979 0.022 160.2);
@@ -167,5 +167,27 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Comfortable touch targets on touch screens (aim for 44×44 CSS px on key mobile controls). */
+@media (pointer: coarse) {
+  [data-slot="button"],
+  [data-slot="toggle-group-item"],
+  [data-slot="sidebar-menu-button"],
+  [data-slot="input"],
+  [data-slot="native-select"] {
+    min-height: 2.75rem;
+  }
+  [data-slot="button"][data-size^="icon"],
+  [data-slot="sidebar-trigger"] {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+  [data-slot="tabs-list"] {
+    height: auto;
+  }
+  [data-slot="tabs-trigger"] {
+    min-height: 2.5rem;
   }
 }

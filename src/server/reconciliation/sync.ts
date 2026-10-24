@@ -5,9 +5,9 @@ import type { WorkspaceContext } from "@/server/auth/session";
 import { getAirwallexClient } from "@/server/airwallex/client";
 import { fetchDeposits, normalizeDeposits, type ProviderDeposit } from "@/server/airwallex/deposits";
 import { AirwallexError } from "@/server/airwallex/errors";
+import { importWindowStart, LOOKBACK_DAYS } from "@/lib/reconciliation/window";
 import { generateSuggestions } from "./suggestions";
 
-const LOOKBACK_DAYS = 90;
 const CHUNK = 200;
 /** The deposit list trails creation (and settlement) by a few seconds; how long to wait for a new deposit. */
 const AWAIT_ATTEMPTS = 5;
@@ -45,7 +45,7 @@ export async function syncTransactions(
 
   try {
     const client = getAirwallexClient();
-    const since = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000);
+    const since = importWindowStart(workspace.reconciliationStartAt);
     const fetched = await fetchDeposits(client, since);
     const { correlationId, truncated } = fetched;
     let deposits = fetched.deposits;
@@ -126,6 +126,7 @@ export async function syncTransactions(
         imported,
         status_changed: statusChanged,
         lookback_days: LOOKBACK_DAYS,
+        since: since.toISOString(),
         unreadable: issues.map((issue) => issue.depositId),
         truncated,
         provider_correlation_id: correlationId,

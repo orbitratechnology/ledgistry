@@ -7,6 +7,7 @@ import { currencyExponent, formatMoney, parseMinor } from "@/lib/money";
 import { fieldErrorsFrom, formValues, reserveFormSchema, type FormState } from "@/lib/validation/forms";
 import { recordAuditEvent } from "@/server/audit/record";
 import { requireWorkspace } from "@/server/auth/session";
+import { loadDemoData, removeDemoData, resetDemoData, type DemoOutcome } from "@/server/demo/service";
 import { recalculatePlans } from "@/server/planner/recalculate";
 
 /** Re-runs the live connection check by re-rendering the Settings page. */
@@ -102,4 +103,28 @@ export async function setReserveEnabledAction(
   await recalculatePlans(context, "reserve_change");
   refresh();
   return { ok: true, message: enabled ? `${data.currency} reserve protection on.` : `${data.currency} reserve protection off.` };
+}
+
+/** Loads the sample records for the demo scenario (idempotent). Never changes Airwallex state. */
+export async function loadDemoDataAction(): Promise<DemoOutcome> {
+  const context = await requireWorkspace();
+  const result = await loadDemoData(context);
+  refresh();
+  return result;
+}
+
+/** Archives the active sample records and loads fresh ones. Audit history is kept. */
+export async function resetDemoDataAction(): Promise<DemoOutcome> {
+  const context = await requireWorkspace();
+  const result = await resetDemoData(context);
+  refresh();
+  return result;
+}
+
+/** Archives the active sample records without loading new ones. */
+export async function removeDemoDataAction(): Promise<DemoOutcome> {
+  const context = await requireWorkspace();
+  const result = await removeDemoData(context);
+  refresh();
+  return result;
 }

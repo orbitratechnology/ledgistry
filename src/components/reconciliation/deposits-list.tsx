@@ -48,8 +48,8 @@ export function DepositsList({
           </EmptyMedia>
           <EmptyTitle>No deposits synced yet</EmptyTitle>
           <EmptyDescription>
-            Sync from Airwallex to import deposits from the last 90 days. In the sandbox you can also simulate a
-            clearly labelled test deposit.
+            Sync from Airwallex to import deposits from the last 90 days (or since this workspace&apos;s reconciliation
+            start date, shown in Settings). In the sandbox you can also simulate a clearly labelled test deposit.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

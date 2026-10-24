@@ -10,6 +10,7 @@ import { Suspense } from "react";
 
 import { LocalDateTime } from "@/components/common/freshness";
 import { PageContainer, PageHeader } from "@/components/layout/page";
+import { DemoCard } from "@/components/settings/demo-card";
 import { ReservesCard } from "@/components/settings/reserves-card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,7 +48,7 @@ export default function SettingsPage() {
     <PageContainer>
       <PageHeader
         title="Settings"
-        description="Protected reserves, the Airwallex Sandbox connection and the controls that keep it safe."
+        description="Protected reserves, the Airwallex Sandbox connection, demo setup and the controls that keep it safe."
       />
       <div className="grid grid-cols-1 gap-4 @4xl/main:grid-cols-2">
         <Suspense fallback={<CardSkeleton />}>
@@ -60,6 +61,9 @@ export default function SettingsPage() {
           <WorkspaceCard />
         </Suspense>
         <SafetyCard />
+        <Suspense fallback={<CardSkeleton wide />}>
+          <DemoCard />
+        </Suspense>
       </div>
     </PageContainer>
   );
@@ -163,6 +167,14 @@ async function WorkspaceCard() {
                   ? `Allowlist (${allowlist.length} email${allowlist.length === 1 ? "" : "s"})`
                   : "Any signed-in account",
             },
+            {
+              term: "Reconciliation start",
+              value: workspace.reconciliationStartAt ? (
+                <LocalDateTime iso={workspace.reconciliationStartAt} />
+              ) : (
+                "Last 90 days"
+              ),
+            },
             { term: "Workspace ID", value: <span className="font-mono text-xs">{workspace.id}</span> },
           ]}
         />
@@ -201,9 +213,9 @@ function SafetyCard() {
   );
 }
 
-function CardSkeleton() {
+function CardSkeleton({ wide = false }: { wide?: boolean }) {
   return (
-    <Card aria-busy="true">
+    <Card aria-busy="true" className={wide ? "@4xl/main:col-span-2" : undefined}>
       <CardHeader className="gap-2">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-4 w-64" />

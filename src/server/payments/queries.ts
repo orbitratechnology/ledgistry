@@ -8,6 +8,8 @@ export type PaymentOperationView = {
   id: string;
   obligationId: string;
   payeeName: string;
+  /** The obligation is a sample record created by "Load demo data" (the transfer itself is real sandbox). */
+  isDemo: boolean;
   amountMinor: bigint;
   currency: string;
   exponent: number;
@@ -30,7 +32,7 @@ export type PaymentOperationView = {
 };
 
 const OPERATION_COLUMNS =
-  "id, obligation_id, currency, reference, beneficiary_id, transfer_method, status, last_provider_status, provider_request_id, provider_transfer_id, provider_fee_currency, failure_code, safe_error_summary, is_sandbox, request_started_at, submitted_at, last_verified_at, completed_at, amount:amount_minor::text, fee:provider_fee_minor::text, obligations(payee_name)";
+  "id, obligation_id, currency, reference, beneficiary_id, transfer_method, status, last_provider_status, provider_request_id, provider_transfer_id, provider_fee_currency, failure_code, safe_error_summary, is_sandbox, request_started_at, submitted_at, last_verified_at, completed_at, amount:amount_minor::text, fee:provider_fee_minor::text, obligations(payee_name, is_demo)";
 
 type OperationRow = {
   id: string;
@@ -53,7 +55,7 @@ type OperationRow = {
   completed_at: string | null;
   amount: string;
   fee: string | null;
-  obligations: { payee_name: string } | null;
+  obligations: { payee_name: string; is_demo: boolean } | null;
 };
 
 function toView(row: OperationRow): PaymentOperationView {
@@ -61,6 +63,7 @@ function toView(row: OperationRow): PaymentOperationView {
     id: row.id,
     obligationId: row.obligation_id,
     payeeName: row.obligations?.payee_name ?? "Unknown payee",
+    isDemo: row.obligations?.is_demo ?? false,
     amountMinor: parseMinor(row.amount) ?? 0n,
     currency: row.currency,
     exponent: currencyExponent(row.currency),

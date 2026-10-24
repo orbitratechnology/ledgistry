@@ -6,7 +6,7 @@ import {
   verifyPaymentAction,
 } from "@/app/(workspace)/obligations/payment-actions";
 import { ActionButton } from "@/components/common/action-button";
-import { PaymentStatusBadge } from "@/components/common/badges";
+import { PaymentStatusBadge, SandboxBadge } from "@/components/common/badges";
 import { LocalDateTime } from "@/components/common/freshness";
 import { Money } from "@/components/common/money";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,12 @@ function OperationItem({ operation, sandbox }: { operation: PaymentOperationView
   const note = operation.lastProviderStatus ? PROVIDER_STATUS_NOTE[operation.lastProviderStatus] : null;
 
   return (
-    <li className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0" data-testid="payment-operation" data-status={operation.status}>
+    <li
+      id={`payment-${operation.id}`}
+      className="flex scroll-mt-20 flex-col gap-2 py-3 first:pt-0 last:pb-0 target:rounded-md target:bg-accent/40"
+      data-testid="payment-operation"
+      data-status={operation.status}
+    >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <div className="min-w-0">
           <p className="font-medium break-words">{operation.payeeName}</p>
@@ -50,6 +55,7 @@ function OperationItem({ operation, sandbox }: { operation: PaymentOperationView
             Sandbox
           </Badge>
         ) : null}
+        {operation.isDemo ? <SandboxBadge label="Demo record" /> : null}
       </div>
       {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
       {operation.safeErrorSummary ? <p className="text-sm">{operation.safeErrorSummary}</p> : null}

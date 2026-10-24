@@ -88,6 +88,11 @@ test.describe("guarded payments (sandbox)", () => {
     // 4. The obligation is paid and the chain is in the audit trail.
     await page.goto("/obligations?view=all");
     await expect(row(page, payee)).toContainText("Paid");
+    // The obligation links to its payment operation.
+    const link = row(page, payee).getByTestId("obligation-payment-link");
+    await expect(link).toContainText("Completed");
+    await link.click();
+    await expect(page.locator("li:target")).toContainText(payee);
     await page.goto("/activity");
     await expect(page.getByText(new RegExp(`Approved EUR\\s25\\.00 to ${payee}`)).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText(new RegExp(`EUR\\s25\\.00 to ${payee}: completed, Airwallex status PAID`)).filter({ visible: true }).first()).toBeVisible();

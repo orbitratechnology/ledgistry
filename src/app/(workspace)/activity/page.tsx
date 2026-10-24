@@ -89,6 +89,9 @@ const EVENT_LABEL: Record<string, string> = {
   "payment.cancelled": "Payment cancelled",
   "payment.verification_failed": "Payment check failed",
   "sandbox.transfer_simulated": "Sandbox transfer outcome simulated",
+  "demo.loaded": "Demo data loaded",
+  "demo.reset": "Demo data reset",
+  "demo.removed": "Demo data removed",
 };
 
 function eventLabel(eventType: string) {

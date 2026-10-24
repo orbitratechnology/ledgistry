@@ -8,6 +8,7 @@ import {
   cancelPaymentReviewAction,
   openPaymentReviewAction,
 } from "@/app/(workspace)/obligations/payment-actions";
+import { SandboxBadge } from "@/components/common/badges";
 import { LocalDateTime } from "@/components/common/freshness";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +47,14 @@ function ReviewDetails({ review }: { review: PaymentReview }) {
           {review.amount}
         </span>
       </Row>
-      <Row term="Payee">{review.payee}</Row>
+      <Row term="Payee">
+        {review.payee}
+        {review.isDemo ? (
+          <span className="mt-1 block">
+            <SandboxBadge label="Demo record" />
+          </span>
+        ) : null}
+      </Row>
       <Row term="Beneficiary" testId="review-beneficiary">
         {review.beneficiary
           ? [

@@ -17,7 +17,8 @@ export type RecalcReason =
   | "obligation_change"
   | "receipt_change"
   | "reserve_change"
-  | "payment_update";
+  | "payment_update"
+  | "demo_data";
 
 export type RecalculateResult =
   | { ok: true; plans: { currency: string; planId: string; version: number; created: boolean }[] }

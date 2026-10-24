@@ -38,12 +38,15 @@ export type PayableObligation = {
   beneficiaryLabel: string | null;
   version: number;
   archived: boolean;
+  isDemo: boolean;
 };
 
 /** Operator-facing review of one payment: every value shown is computed server-side. */
 export type PaymentReview = {
   obligationId: string;
   payee: string;
+  /** A sample business record created by "Load demo data". */
+  isDemo: boolean;
   description: string;
   invoiceReference: string | null;
   dueDate: string;
@@ -86,7 +89,7 @@ export async function loadPayableObligation(
   const { data } = await supabase
     .from("obligations")
     .select(
-      "id, payee_name, description, invoice_reference, currency, due_date, priority, status, beneficiary_id, beneficiary_label, version, archived_at, amount:amount_minor::text",
+      "id, payee_name, description, invoice_reference, currency, due_date, priority, status, beneficiary_id, beneficiary_label, version, archived_at, is_demo, amount:amount_minor::text",
     )
     .eq("workspace_id", workspace.id)
     .eq("id", obligationId)
@@ -107,6 +110,7 @@ export async function loadPayableObligation(
     beneficiaryLabel: data.beneficiary_label,
     version: data.version,
     archived: data.archived_at !== null,
+    isDemo: data.is_demo,
   };
 }
 
@@ -212,6 +216,7 @@ export async function gatherPaymentFacts(context: WorkspaceContext, obligation: 
     review: {
       obligationId: obligation.id,
       payee: obligation.payeeName,
+      isDemo: obligation.isDemo,
       description: obligation.description,
       invoiceReference: obligation.invoiceReference,
       dueDate: obligation.dueDate,

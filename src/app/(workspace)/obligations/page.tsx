@@ -22,6 +22,7 @@ import { FORM_CURRENCIES } from "@/lib/validation/forms";
 import { requireWorkspace } from "@/server/auth/session";
 import { getBeneficiaryOptions } from "@/server/obligations/beneficiary-options";
 import { listObligations, type ObligationFilters as Filters } from "@/server/obligations/queries";
+import { latestOperationByObligation } from "@/server/payments/queries";
 
 export const metadata: Metadata = { title: "Obligations" };
 
@@ -36,7 +37,7 @@ export default function ObligationsPage({ searchParams }: PageProps<"/obligation
         <ObligationsSection searchParams={searchParams} />
       </Suspense>
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-        <PaymentsCard limit={10} />
+        <PaymentsCard limit={20} />
       </Suspense>
     </PageContainer>
   );
@@ -60,7 +61,7 @@ async function ObligationsSection({
 }) {
   const context = await requireWorkspace();
   const filters = readFilters(await searchParams);
-  const items = await listObligations(context, filters);
+  const [items, payments] = await Promise.all([listObligations(context, filters), latestOperationByObligation(context)]);
   const beneficiaries = getBeneficiaryOptions();
   const filtered = filters.view !== "open" || filters.currency || filters.query;
 
@@ -71,7 +72,7 @@ async function ObligationsSection({
         <ObligationSheet beneficiaries={beneficiaries} />
       </div>
       {items.length > 0 ? (
-        <ObligationList items={items} beneficiaries={beneficiaries} />
+        <ObligationList items={items} beneficiaries={beneficiaries} payments={payments} />
       ) : (
         <Empty className="border">
           <EmptyHeader>

@@ -13,7 +13,12 @@ export type SessionUser = {
 
 export type WorkspaceContext = {
   user: SessionUser;
-  workspace: { id: string; name: string };
+  workspace: {
+    id: string;
+    name: string;
+    /** Deposits created before this are not imported (null: the default lookback). */
+    reconciliationStartAt: string | null;
+  };
   supabase: SupabaseServerClient;
 };
 
@@ -50,5 +55,9 @@ export const requireWorkspace = cache(async (): Promise<WorkspaceContext> => {
     throw new Error("Could not load your workspace. Check the database connection and try again.");
   }
 
-  return { user, workspace: { id: data.id, name: data.name }, supabase };
+  return {
+    user,
+    workspace: { id: data.id, name: data.name, reconciliationStartAt: data.reconciliation_start_at ?? null },
+    supabase,
+  };
 });

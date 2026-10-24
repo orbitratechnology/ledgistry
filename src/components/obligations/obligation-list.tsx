@@ -5,7 +5,13 @@ import {
   restoreObligationAction,
 } from "@/app/(workspace)/obligations/actions";
 import { ActionButton } from "@/components/common/action-button";
-import { ObligationStatusBadge, OverdueBadge, PriorityBadge, SandboxBadge } from "@/components/common/badges";
+import {
+  ObligationStatusBadge,
+  OverdueBadge,
+  PaymentStatusBadge,
+  PriorityBadge,
+  SandboxBadge,
+} from "@/components/common/badges";
 import { Money } from "@/components/common/money";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +26,7 @@ import {
 import { formatIsoDate } from "@/lib/format";
 import { PaymentReviewSheet } from "@/components/payments/payment-review-sheet";
 import type { ObligationView } from "@/server/obligations/queries";
+import type { PaymentOperationView } from "@/server/payments/queries";
 import { ObligationSheet, type BeneficiaryOptions } from "./obligation-sheet";
 
 const dateLabel = formatIsoDate;
@@ -79,6 +86,21 @@ function Actions({ item, beneficiaries }: { item: ObligationView; beneficiaries:
   );
 }
 
+/** The obligation's latest payment, linking to its entry (request id, provider status) under Payments. */
+function LatestPayment({ operation }: { operation: PaymentOperationView | undefined }) {
+  if (!operation) return null;
+  return (
+    <a
+      href={`#payment-${operation.id}`}
+      className="inline-flex items-center gap-1.5 rounded-md text-xs text-muted-foreground underline-offset-4 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      data-testid="obligation-payment-link"
+    >
+      <span>Payment</span>
+      <PaymentStatusBadge status={operation.status} />
+    </a>
+  );
+}
+
 function Beneficiary({ item }: { item: ObligationView }) {
   return item.beneficiaryLabel ? (
     <span className="text-sm">{item.beneficiaryLabel}</span>
@@ -93,9 +115,12 @@ function Beneficiary({ item }: { item: ObligationView }) {
 export function ObligationList({
   items,
   beneficiaries,
+  payments = new Map(),
 }: {
   items: ObligationView[];
   beneficiaries: Promise<BeneficiaryOptions>;
+  /** Latest payment operation per obligation id. */
+  payments?: Map<string, PaymentOperationView>;
 }) {
   return (
     <>
@@ -125,6 +150,7 @@ export function ObligationList({
                   <ObligationStatusBadge status={item.status} />
                   {item.overdue ? <OverdueBadge /> : null}
                   {item.isDemo ? <SandboxBadge label="Demo record" /> : null}
+                  <LatestPayment operation={payments.get(item.id)} />
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                   <span className="text-muted-foreground">Due {dateLabel(item.dueDate)}</span>
@@ -160,6 +186,11 @@ export function ObligationList({
                     {item.description}
                     {item.invoiceReference ? ` · ${item.invoiceReference}` : ""}
                   </p>
+                  {item.isDemo ? (
+                    <div className="mt-1">
+                      <SandboxBadge label="Demo record" />
+                    </div>
+                  ) : null}
                 </TableCell>
                 <TableCell className="text-right font-medium">
                   <Money minor={item.amountMinor} currency={item.currency} exponent={item.exponent} />
@@ -174,7 +205,10 @@ export function ObligationList({
                   <PriorityBadge priority={item.priority} />
                 </TableCell>
                 <TableCell>
-                  <ObligationStatusBadge status={item.status} />
+                  <div className="flex flex-col items-start gap-1">
+                    <ObligationStatusBadge status={item.status} />
+                    <LatestPayment operation={payments.get(item.id)} />
+                  </div>
                 </TableCell>
                 <TableCell className="hidden max-w-52 whitespace-normal lg:table-cell">
                   <Beneficiary item={item} />
